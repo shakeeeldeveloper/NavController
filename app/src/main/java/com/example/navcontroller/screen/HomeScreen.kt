@@ -2,7 +2,9 @@ package com.example.navcontroller.screen
 
 import android.R.attr.enabled
 import android.app.Activity
+import android.app.Activity.RESULT_OK
 import android.content.Intent
+import android.speech.RecognizerIntent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,6 +49,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import com.example.navcontroller.R
 import com.example.navcontroller.activities.LanguageActivity
 import com.example.navcontroller.activities.TranslationActivity
+import com.example.navcontroller.viewmodels.SpeechViewModel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -54,24 +57,12 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
-/*    viewModel: HomeViewModel = hiltViewModel(),
-    onSettingsClick: () -> Unit = {},
-    onSwitchToggle: (Boolean) -> Unit = {},
-    isSwitchChecked: Boolean = false,
-    onTransBtnClick: () -> Unit = {},
-    onVoiceInputClick: () -> Unit = {},
-    onLangSwitch: () -> Unit = {},
-    textInput: String = "",
-    onTextChange: (String) -> Unit = {},
-    onLangSelected:  (String) -> Unit = {},
-    translatedText: String,
-    isTranslating: Boolean,
-    errorMessage: String*/
+
 
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
+    val speechViewModel: SpeechViewModel = hiltViewModel()
     var textInput by remember { mutableStateOf("") }
-    var onTextChange: String = ""
     var errorMessage: String = ""
     var isTranslating by remember { mutableStateOf(false) }
     var onTransBtnClick by remember { mutableStateOf(false) }
@@ -80,18 +71,7 @@ fun HomeScreen(
 
     val progress by viewModel.progressStatus.collectAsState()
 
-    /*when {
-        isTranslating -> {
-            if (progress != "Idle" && progress != "Done.") {
-                Text(text = progress, color = Color.Gray)
-               // CircularProgressIndicator()
-            }
-           // Text("Translating...")
 
-        }
-       // translatedText.isNotEmpty() ->    Text("Translated: $translatedText")
-        errorMessage.isNotEmpty() -> Text("Error: $errorMessage")
-    }*/
 
     val context = LocalContext.current
 
@@ -108,20 +88,55 @@ fun HomeScreen(
     val sourceLang = viewModel.firstLang
     val targetLang = viewModel.secondLang
 
+
+
+    // Create launcher inside Composable
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val spokenText = data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.getOrNull(0)
+
+            if (spokenText != null) {
+                // update your ViewModel or state here
+                speechViewModel.updateSpokenText(spokenText)
+
+                textInput=spokenText
+
+            }
+        }
+    }
+
+    // Call this when you want to start recognition
+    fun startSpeechRecognition(selectedLang: String) {
+        val intent = speechViewModel.getSpeechIntent(selectedLang)
+        speechLauncher.launch(intent)
+    }
     LaunchedEffect(onTransBtnClick) {
 
         viewModel.inputText = textInput
         viewModel.translateTextHome()
         isTranslating = viewModel.isTranslating
         errorMessage = viewModel.errorMessage
+
+
     }
+    /*LaunchedEffect(onVoiceInputClick) {
+
+        startSpeechRecognition(viewModel.firstLang)
+
+
+    }*/
 
 
     LaunchedEffect(translatedText) {
         if (translatedText.isNotEmpty()) {
 
-            onTextChange=""
 
+            textInput=""
             focusManager.clearFocus()
 
             Log.d("lang",sourceLang+"   in home $targetLang    $originalText     $translatedText")
@@ -173,16 +188,7 @@ fun HomeScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                /*Icon(
-                    painter = painterResource(id = R.drawable.setting_icon),
-                    contentDescription = "Settings",
-                    modifier = Modifier
-                        .size(27.dp)
-                        .clickable {
-                            showSettings = true
-                            onSettingsClick()
-                        }
-                )*/
+
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -330,23 +336,19 @@ fun HomeScreen(
                                         //onTransBtnClick()
                                     } else {
                                         onVoiceInputClick=true
+                                        startSpeechRecognition(viewModel.firstLang)
                                         //onVoiceInputClick()
                                     }
                                     coroutineScope.launch {
                                         delay(8000)
+
+                                        onVoiceInputClick=false
+                                        onTransBtnClick=false
                                         btnTrans=true
                                     }
                                 }
                             )
-                           /* .clickable {
-                                enabled = !isTranslating, // Disable click when translating
 
-                                if (textInput.isNotEmpty()) {
-                                    onTransBtnClick()
-                                } else {
-                                    onVoiceInputClick()
-                                }
-                            }*/
                     )
 
                 }

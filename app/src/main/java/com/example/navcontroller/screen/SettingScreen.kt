@@ -38,64 +38,19 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
-    onOpenHistory: () -> Unit
+    navController: androidx.navigation.NavController
+   /* onOpenHistory: () -> Unit*/
 ) {
-    var showPrivacyPolicy by remember { mutableStateOf(false) }
-    var showRateUs by remember { mutableStateOf(false) }
-    var showShareApp by remember { mutableStateOf(false) }
+
     val coroutineScope = rememberCoroutineScope()
 
     //val activity = LocalActivity.current
     val context = LocalContext.current
 
-    val activity = context as? Activity
-    val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    DisposableEffect(lifecycleOwner) {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // 👇 Move the app to background (home screen)
-                activity?.moveTaskToBack(true)
-            }
-        }
 
-        dispatcher?.addCallback(lifecycleOwner, callback)
 
-        onDispose {
-            callback.remove()
-        }
-    }
-    /*   if (showPrivacyPolicy){
-           LaunchedEffect(Unit) {
-               val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.freeprivacypolicy.com/live/841a0503-8798-444c-83da-4c50ecac913d"))
-               context.startActivity(intent)
-           }
-       }
-       if (showRateUs){
-           LaunchedEffect(Unit) {
-               val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.example.navcontroller"))
-               context.startActivity(intent)
-           }
-       }
-       if (showShareApp){
-           LaunchedEffect(Unit) {
-               val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.example.navcontroller"))
-               context.startActivity(intent)
-           }
-       }*/
-    // val viewModel: HomeViewModel = hiltViewModel()
 
-    /*    if (showHistory) {
-            viewModel.loadHistory()
-            HistoryScreen(
-                historyItems = viewModel.historyList.value,
-                onBack = { showHistory = false },
-                onClear = { viewModel.clearHistory() },
-                onDelete = { viewModel.deleteItem(it) }
-            )
-        }
-        else {*/
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = {
@@ -130,8 +85,9 @@ fun SettingScreen(
             SettingItem(
                 title = "History",
                 iconStart = R.drawable.history_icon,
-                onClick = { /*showHistory = true*/
-                    onOpenHistory()
+                onClick = {
+                    navController.navigate("history")
+
                 }
             )
             SettingItem(
@@ -237,143 +193,5 @@ fun SettingItem(
         )
     }
 }
-
-
-/*
-import android.widget.Toast
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.graphicsLayer
-import com.example.navcontroller.R // Replace with your actual package
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SettingScreen() {
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        TopAppBar(
-            title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Setting",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Icon(
-                        painter = painterResource(id = R.drawable.setting_icon),
-                        contentDescription = "Settings",
-                        modifier = Modifier
-                            .padding(end = 12.dp),
-                        tint = Color.Unspecified
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
-            modifier = Modifier.shadow(4.dp)
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-
-        ) {
-            SettingItem(
-                title = "History",
-                iconStart = R.drawable.history_icon,
-                onClick = {
-
-                }
-
-            )
-            SettingItem()
-            SettingItem()
-        }
-    }
-
-}
-@Composable
-fun SettingItem(
-    modifier: Modifier = Modifier,
-    title: String = "Change Language",
-    subtitle: String = "Tap to change",
-    iconStart: Int = R.drawable.back_icon,
-    iconEnd: Int = R.drawable.next_icon,
-    onClick: () -> Unit = {}
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Start Icon
-        Image(
-            painter = painterResource(id = iconStart),
-            contentDescription = "Start Icon",
-            modifier = Modifier
-                .size(24.dp)
-        )
-
-        // Texts
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 12.dp)
-        ) {
-            Text(
-                text = title,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-        }
-
-        // End Icon
-        Image(
-            painter = painterResource(id = iconEnd),
-            contentDescription = "Next Icon",
-            modifier = Modifier
-                .size(18.dp)
-        )
-    }
-}*/
 
 

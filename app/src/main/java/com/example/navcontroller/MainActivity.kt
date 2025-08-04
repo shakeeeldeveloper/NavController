@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,24 +17,53 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.navcontroller.screen.ConversationScreen
 import com.example.navcontroller.screen.HomeScreen
+import com.example.navcontroller.screen.SettingScreen
+import com.example.navcontroller.ui.theme.NavControllerTheme
+import androidx.activity.compose.BackHandler
+import com.example.navcontroller.screen.HistoryScreen
+
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
 
 // ---------------------- Sealed class for Bottom Navigation Tabs ----------------------
-sealed class BottomNavScreen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : BottomNavScreen("home", "Home", Icons.Default.Home)
-    object Search : BottomNavScreen("search", "Search", Icons.Default.Search)
-    object Profile : BottomNavScreen("profile_graph", "Profile", Icons.Default.Person) // Use a graph route for nested nav
+
+sealed class BottomNavScreen(
+    val route: String,
+    @DrawableRes val selectedIcon: Int,
+    @DrawableRes val unselectedIcon: Int
+) {
+    object Home : BottomNavScreen(
+        "home",
+        R.drawable.home_icon,
+        R.drawable.home_icon_outline
+    )
+
+    object Conversation : BottomNavScreen(
+        "conversation",
+        R.drawable.chat_icon_filled,
+        R.drawable.chat_icon_outline
+    )
+
+    object Setting : BottomNavScreen(
+        "setting_graph",
+        R.drawable.setting_icon_filled,
+        R.drawable.setting_icon
+    )
 }
+
 
 // ---------------------- Main Activity ----------------------
 @HiltAndroidApp
@@ -44,43 +74,60 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MainScreen()
+            NavControllerTheme {
+                MainScreen()
+            }
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomNavigationBar(navController: NavHostController) {
+    val items = listOf(
+        BottomNavScreen.Home,
+        BottomNavScreen.Conversation,
+        BottomNavScreen.Setting
+    )
+
+    NavigationBar {
+        val navBackStackEntry = navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry.value?.destination?.route
+
+        items.forEach { screen ->
+            val selected = currentRoute == screen.route
+
+            NavigationBarItem(
+                selected = selected,
+                onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(
+                            id = if (selected) screen.selectedIcon else screen.unselectedIcon
+                        ),
+                        contentDescription = null,
+                        tint = Color.Unspecified
+                    )
+                },
+                label = null,
+                alwaysShowLabel = false
+            )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainScreen() {
-    val navController = rememberNavController()
-    val bottomNavItems = listOf(
-        BottomNavScreen.Home,
-        BottomNavScreen.Search,
-        BottomNavScreen.Profile
-    )
 
+
+@Composable
+fun MainScreen(navController: NavHostController = rememberNavController()) {
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                bottomNavItems.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
-            }
+            BottomNavigationBar(navController) // 👈 Call your bottom nav here
         }
     ) { innerPadding ->
         NavHost(
@@ -88,53 +135,31 @@ fun MainScreen() {
             startDestination = BottomNavScreen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Home Tab
             composable(BottomNavScreen.Home.route) { HomeScreen() }
+            composable(BottomNavScreen.Conversation.route) { ConversationScreen (navController) }
 
-            // Search Tab
-            composable(BottomNavScreen.Search.route) { SearchScreen() }
-
-            // Profile Tab with nested navigation
             navigation(
-                startDestination = "profile",
-                route = BottomNavScreen.Profile.route
+                startDestination = "setting",
+                route = BottomNavScreen.Setting.route
             ) {
-                composable("profile") { ProfileScreen(navController) }
-                composable("profile_details") { ProfileDetailsScreen(navController) }
+                composable("setting") { SettingScreen(navController) }
+                composable("history") { HistoryScreen(navController) }
             }
         }
     }
 }
 
+
 // ---------------------- Screen Composables ----------------------
+
+
+
+
 /*@Composable
-fun HomeScreen() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Home Screen")
-    }
-}*/
-
-@Composable
-fun SearchScreen() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Search Screen")
-    }
-}
-
-@Composable
-fun ProfileScreen(navController: androidx.navigation.NavController) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Button(onClick = { navController.navigate("profile_details") }) {
-            Text("Go to Profile Details")
-        }
-    }
-}
-
-@Composable
-fun ProfileDetailsScreen(navController: androidx.navigation.NavController) {
+fun HistoryScreen(navController: androidx.navigation.NavController) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Button(onClick = { navController.popBackStack() }) {
-            Text("Back to Profile")
+            Text("Back to Setting")
         }
     }
-}
+}*/

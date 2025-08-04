@@ -31,9 +31,10 @@ import com.example.navcontroller.viewmodels.HomeViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    onBack: () -> Unit,
+    navController: androidx.navigation.NavController,
+/*    onBack: () -> Unit,
     onClear: () -> Unit,
-    onDelete: (HistoryEntity) -> Unit
+    onDelete: (HistoryEntity) -> Unit*/
 ) {
     val forHistoryViewModel: HomeViewModel = hiltViewModel()
     forHistoryViewModel.loadHistory()
@@ -55,7 +56,10 @@ fun HistoryScreen(
                     )
                     Text("Back", Modifier
 
-                        .clickable { onBack() }
+                        .clickable {
+                            navController.popBackStack()
+                            //onBack()
+                        }
                         .padding(16.dp)
                     )
                 }
@@ -68,7 +72,10 @@ fun HistoryScreen(
             Text(
                 "Clear All", Modifier
 
-                    .clickable { onClear() }
+                    .clickable {
+                        forHistoryViewModel.clearHistory()
+                        //onClear()
+                    }
                     .padding(16.dp),
                 color = Color.Blue
             )
@@ -77,14 +84,22 @@ fun HistoryScreen(
 
         LazyColumn {
             items(forHistoryViewModel.historyList.value) { item ->
-                HistoryCard(item = item, onDelete = onDelete)
+                HistoryCard(
+                    item = item
+                   // onDelete = onDelete
+                )
             }
         }
     }
 }
 
 @Composable
-fun HistoryCard(item: HistoryEntity, onDelete: (HistoryEntity) -> Unit) {
+fun HistoryCard(
+    item: HistoryEntity
+//    onDelete: (HistoryEntity) -> Unit
+) {
+    val forHistoryViewModel: HomeViewModel = hiltViewModel()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -97,7 +112,11 @@ fun HistoryCard(item: HistoryEntity, onDelete: (HistoryEntity) -> Unit) {
                     Text("From (${item.sourceLangCode}): ${item.sourceText}")
                     Text("To (${item.targetLangCode}): ${item.translatedText}")
                 }
-                IconButton(onClick = { onDelete(item) }) {
+                IconButton(onClick = {
+                    forHistoryViewModel.deleteItem(item)
+                    //onDelete(item)
+                }
+                ) {
                     Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red)
 
 

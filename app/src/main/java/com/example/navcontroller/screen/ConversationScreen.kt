@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.navcontroller.R
+import com.example.navcontroller.screen.HistoryScreen
 import com.example.navcontroller.activities.LanguageActivity
 import com.example.navcontroller.viewmodels.ChatViewModel
 import com.example.navcontroller.viewmodels.ChatSpeechViewModel
@@ -53,21 +54,21 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationScreen(
-   onOpenHistory: () -> Unit
+    navController: androidx.navigation.NavController
+  /* onOpenHistory: () -> Unit*/
    // onOpenHistory: (Screen.History) -> Unit
 
 ) {
     val scrollState = rememberScrollState()
     var isRotated by remember { mutableStateOf(false) }
+    var showHistory by remember { mutableStateOf(false) }
 
     val chatViewModel: ChatViewModel = hiltViewModel()
 
     val context = LocalContext.current
     val activity = LocalActivity.current
 
-    BackHandler {
-        activity?.finishAffinity() // or activity.moveTaskToBack(true)
-    }
+
 
 
 
@@ -82,6 +83,7 @@ fun ConversationScreen(
     LaunchedEffect(Unit) {
         tts.language = Locale.US // or Locale("ur") for Urdu
     }
+
 
     DisposableEffect(Unit) {
         onDispose {
@@ -131,7 +133,10 @@ fun ConversationScreen(
                         contentDescription = "History",
                         modifier = Modifier
                             .padding(end = 12.dp)
-                            .clickable { onOpenHistory() },
+                            .clickable { //onOpenHistory()
+                                navController.navigate("history")
+
+                                       },
                         tint = Color.Unspecified
                     )
                 }
