@@ -114,7 +114,7 @@ fun HistoryCard(
                 }
                 IconButton(onClick = {
                     forHistoryViewModel.deleteItem(item)
-                    //onDelete(item)
+
                 }
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red)
