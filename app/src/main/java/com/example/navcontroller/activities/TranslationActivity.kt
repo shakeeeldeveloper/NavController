@@ -1,12 +1,9 @@
 package com.example.navcontroller.activities
 
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,7 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.navcontroller.screen.BeforeTranslateCard
 import com.example.navcontroller.screen.TranslationCardUI
 import com.example.navcontroller.viewmodels.HomeViewModel
@@ -39,20 +39,115 @@ class TranslationActivity : ComponentActivity() {
         setContent {
 
 
-                    TranslationScreen (
-                        originalText = original,
-                        translatedText = translated,
-                        sourceLang = source,
-                        targetLang = target
-                    )
-                }
-
+            TranslationScreen(
+                originalText = original,
+                translatedText = translated,
+                sourceLang = source,
+                targetLang = target,
+                activity = this
+            )
         }
+
+    }
+
+
 
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TranslationScreen(
+    navController: NavHostController = rememberNavController(),
+    originalText: String,
+    translatedText: String,
+    sourceLang: String,
+    targetLang: String,
+    activity: TranslationActivity
+) {
+    var original by remember { mutableStateOf(originalText) }
+    var showBeforeCard by remember { mutableStateOf(false) }
+    var btnTrans by remember { mutableStateOf(true) }
+    var showEditBeforeCard by remember { mutableStateOf(false) }
+    val viewModel: HomeViewModel = hiltViewModel()
+
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Translation") })
+        }
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = "TranslationCardUI",
+            modifier = Modifier.padding(padding)
+        ) {
+            composable("showEditBeforeCard") {
+
+                BeforeTranslateCard(
+                    navController,
+                    originalText,
+                    translatedText,
+                    sourceLang,
+                    targetLang,
+                    isTranslating = viewModel.isTranslating,
+                    errorMessage = viewModel.errorMessage,
+                    activity
+                )
+            }
+
+            composable("showBeforeCard") {
+                BeforeTranslateCard(
+                    navController,
+                    "",
+                    "",
+                    sourceLang,
+                    targetLang,
+                    isTranslating = viewModel.isTranslating,
+                    errorMessage = viewModel.errorMessage,
+                    activity = activity,
+                )
+            }
+            composable("TranslationCardUI") {
+                TranslationCardUI(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    originalText = original,
+                    translatedText = translatedText,
+                    onOriginalTextChange = { updatedText -> original = updatedText },
+                    onEditClick = {
+                        showEditBeforeCard = true
+                        navController.popBackStack()
+                    },
+                    onClearClick = {
+                        showBeforeCard = true
+                        navController.popBackStack()
+                    },
+
+                    )
+            }
+
+
+        }
+        if (showEditBeforeCard) {
+
+
+            navController.navigate("showEditBeforeCard")
+        } else if (showBeforeCard) {
+
+            navController.navigate("showBeforeCard")
+
+        } else {
+            navController.navigate("TranslationCardUI")
+
+
+        }
+    }
+}
+
+// ----------------ORIGINAL ---------------------------
+/*@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TranslationScreen(
     originalText: String,
@@ -72,6 +167,7 @@ fun TranslationScreen(
             TopAppBar(title = { Text("Translation") })
         }
     ) { padding ->
+
         if (showEditBeforeCard) {
 
             Box(modifier = Modifier.padding(padding)) {
@@ -117,5 +213,5 @@ fun TranslationScreen(
             )
         }
     }
-}
+}*/
 

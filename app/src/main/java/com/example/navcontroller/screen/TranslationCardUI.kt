@@ -3,6 +3,7 @@ import android.content.Intent
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -38,6 +39,7 @@ import java.util.Locale
 
 @Composable
 fun TranslationCardUI(
+    navController: androidx.navigation.NavController,
     modifier: Modifier = Modifier,
     originalText: String,
     translatedText: String,
@@ -79,7 +81,7 @@ fun TranslationCardUI(
         modifier = modifier
             .fillMaxWidth()
 
-            .padding(horizontal = 15.dp, vertical = 15.dp)
+            .padding(horizontal = 15.dp)
     ) {
         // Original Text Card
         Card(
@@ -308,6 +310,14 @@ fun TranslationCardUI(
                             }
                     )
                 }
+            }
+        }
+    }
+
+    BackHandler {
+        navController.navigate("showEditBeforeCard") {
+            popUpTo("TranslationCardUI") {
+                inclusive = true
             }
         }
     }

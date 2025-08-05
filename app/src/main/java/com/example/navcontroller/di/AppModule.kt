@@ -28,19 +28,6 @@ object AppModule {
         return HistoryManager(context)
     }
 
-/*    @Provides
-    @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "translation_history_db"
-        ).build()
-    }
 
-    @Provides
-    fun provideHistoryDao(database: AppDatabase): HistoryDao {
-        return database.historyDao()
-    }*/
 }
 

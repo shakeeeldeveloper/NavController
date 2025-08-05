@@ -1,39 +1,32 @@
-package com.example.navcontroller
+package com.example.navcontroller.activities
 
 import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.navcontroller.screen.ConversationScreen
 import com.example.navcontroller.screen.HomeScreen
 import com.example.navcontroller.screen.SettingScreen
 import com.example.navcontroller.ui.theme.NavControllerTheme
-import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.navcontroller.R
 import com.example.navcontroller.screen.HistoryScreen
+import com.example.navcontroller.screen.LottieTranslateAnimation
 
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
@@ -58,7 +51,7 @@ sealed class BottomNavScreen(
     )
 
     object Setting : BottomNavScreen(
-        "setting_graph",
+        "setting",
         R.drawable.setting_icon_filled,
         R.drawable.setting_icon
     )
@@ -75,7 +68,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             NavControllerTheme {
-                MainScreen()
+                var isAnimationDone by remember { mutableStateOf(false) }
+                if (isAnimationDone) {
+                    MainScreen()
+                } else {
+                    LottieTranslateAnimation(
+                        onNavigateToAdScreen = {
+                            isAnimationDone = true
+                        }
+                    )
+                }
+
             }
         }
     }
@@ -137,14 +140,16 @@ fun MainScreen(navController: NavHostController = rememberNavController()) {
         ) {
             composable(BottomNavScreen.Home.route) { HomeScreen() }
             composable(BottomNavScreen.Conversation.route) { ConversationScreen (navController) }
+            composable(BottomNavScreen.Setting.route) { SettingScreen (navController) }
+            composable("history") { HistoryScreen(navController) }
 
-            navigation(
+            /*navigation(
                 startDestination = "setting",
                 route = BottomNavScreen.Setting.route
             ) {
                 composable("setting") { SettingScreen(navController) }
                 composable("history") { HistoryScreen(navController) }
-            }
+            }*/
         }
     }
 }

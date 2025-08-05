@@ -41,23 +41,25 @@ import androidx.compose.runtime.collectAsState
 import com.example.navcontroller.activities.LanguageActivity
 import com.example.navcontroller.activities.TranslationActivity
 import com.example.navcontroller.viewmodels.SpeechViewModel
-import java.util.Locale
-import android.Manifest
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
 @Composable
 fun BeforeTranslateCard(
-
+    navController: NavController,
     originalText: String,
     translatedText: String,
     sourceLang: String,
     targetLang: String,
     isTranslating: Boolean,
-    errorMessage: String
+    errorMessage: String,
+    activity: Activity
 
 ) {
     val homeViewModel: HomeViewModel = hiltViewModel()
@@ -187,10 +189,6 @@ fun BeforeTranslateCard(
 
 
     Log.d("lang", homeViewModel.firstLang + " home   ${homeViewModel.secondLang}")
-
-
-
-
 
 
     Column(
@@ -387,8 +385,9 @@ fun BeforeTranslateCard(
 
     }
 
-
-
+    BackHandler {
+        activity.finish()
+    }
 
 
 
